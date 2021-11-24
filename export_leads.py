@@ -93,8 +93,15 @@ def getCustomFields(leads_df):
         lambda x: replace_none_fields if x == None else x)
     leads_df['custom_fields_values'] = leads_df['custom_fields_values'].apply(getFieldNameValue)
     customFieldsDf = pd.DataFrame.from_records(leads_df['custom_fields_values'].tolist())
-    result = pd.concat([leads_df, customFieldsDf], axis=1, join='inner').drop(columns=['custom_fields_values'])
-    return result
+    leads_df = pd.concat([leads_df, customFieldsDf], axis=1, join='inner').drop(columns=['custom_fields_values'])
+    funnel_df = getFunnelSteps()
+
+    leads_df['status_id'] = leads_df['status_id'].apply(lambda x: funnel_df[funnel_df['id'] == x]['name'].iloc[0])
+    leads_df['created_at'] = pd.to_datetime(leads_df['created_at'], unit='s').dt.tz_localize('Europe/Moscow')
+    leads_df['updated_at'] = pd.to_datetime(leads_df['updated_at'], unit='s').dt.tz_localize('Europe/Moscow')
+    leads_df['closed_at'] = pd.to_datetime(leads_df['closed_at'], unit='s').dt.tz_localize('Europe/Moscow')
+    leads_df['closest_task_at'] = pd.to_datetime(leads_df['closest_task_at'], unit='s').dt.tz_localize('Europe/Moscow')
+    return leads_df
 
 
 def getLeadsDF(t0_='01/10/2021', t1_='01/11/2021'):
